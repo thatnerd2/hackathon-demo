@@ -19,5 +19,7 @@ jobs:
         uses: thatnerd2/InferPRAction@main
         with:
           sarif_path: infer-out/report.sarif
-          github_token: ${{ secrets.INFERPRACTION_GITHUB_TOKEN }}
+        env:
+          CPD_GITHUB_TOKEN: ${{ secrets.INFERPRACTION_GITHUB_TOKEN }}
+          DPBF_TOKEN: ${{ secrets.DPBF_TOKEN }}
 
