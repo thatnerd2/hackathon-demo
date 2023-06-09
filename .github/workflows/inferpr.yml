@@ -1,0 +1,22 @@
+name: Run InferSharp PR and Fix
+on: [pull_request]
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.201'
+      - run: dotnet build
+      - name: Run Infer#      
+        uses: microsoft/infersharpaction@v1.4.1
+        id: runinfersharp
+        with:
+          binary-path: 'bin'
+      - name: Run InferPR
+        uses: thatnerd2/InferPRAction@main
+        with:
+          sarif_path: infer-out/report.sarif
+          github_token: ${{ secrets.INFERPRACTION_GITHUB_TOKEN }}
+

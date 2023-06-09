@@ -1,0 +1,21 @@
+name: Trigger on Review Comment
+
+on:
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  check_review_comment:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run InferPRResponse
+      uses: thatnerd2/InferPRResponseAction@main
+      with:
+        comment_id: ${{ github.event.comment.id }}
+      env:
+        CPD_GITHUB_TOKEN: ${{ secrets.INFERPRACTION_GITHUB_TOKEN }}
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+        OPENAI_DEPLOYMENT_NAME: ${{ secrets.OPENAI_DEPLOYMENT_NAME }}
+
+
