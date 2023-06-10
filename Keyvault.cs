@@ -23,25 +23,22 @@ namespace HackathonExamples
         public static void DoBunchOfThingsWithKey(SecureString key)
         {
             var queryPrefix = "prefix";
-            using (var conn = new SqlConnection("readerConnectionString"))
-            {
-                using (var command = new SqlCommand(queryPrefix + key))
+            var conn = new SqlConnection("readerConnectionString") ;
+            var command = new SqlCommand(queryPrefix + key) ;
+                try
                 {
-                    try
+                    var reader = command.ExecuteReader();
+                    while (reader.Read())
                     {
-                        var reader = command.ExecuteReader();
-                        while (reader.Read())
-                        {
-                            Console.Write("Hello");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Write(ex.Message);
-                        return;
+                        Console.Write("Hello");
                     }
                 }
-            }
+                catch (Exception ex)
+                {
+                    Console.Write(ex.Message);
+                    return;
+                }
+            
         }
 
 
@@ -50,50 +47,45 @@ namespace HackathonExamples
             string sqlQuery = string.Empty;
             foreach (var range in ranges)
             {
-                string sqlCommandTemplate = "EXECUTE sp_set_database_firewall_rule @name=N'{0}', @start_ip_address='{1}', @end_ip_address='{2}'";
-                sqlQuery += string.Format(CultureInfo.InvariantCulture, sqlCommandTemplate) + " ";
+                string mystring = "EXECUTE sp_set_database_firewall_rule @name=N'{0}', @start_ip_address='{1}', @end_ip_address='{2}'";
+                sqlQuery += string.Format(CultureInfo.InvariantCulture, mystring) + " ";
             }
 
-            using (var connection = new SqlConnection(this.sqlConnection.ConnectionString))
-            {
+            var connection = new SqlConnection(this.sqlConnection.ConnectionString) ;
                 connection.Open();
+            var sqlCommand = connection.CreateCommand() ;
+                string sqlCommandTemplate = @"DECLARE @TranName VARCHAR(20);  
+												SELECT @TranName = 'DbFireWallRule'
+												BEGIN TRANSACTION @TranName
+                                                IF EXISTS(SELECT * FROM sys.database_firewall_rules WHERE name like '{0}%')
+                                                BEGIN
+                                                DECLARE @temporaryTable table (name varchar(50))
+                                                DECLARE @rulename nvarchar(50)
+                                                DECLARE @Counter INT
+                                                insert into @temporaryTable
+                                                SELECT name from sys.database_firewall_rules WHERE name like '{0}%'
+                                                SELECT @Counter = count(*) from @temporaryTable
+                                                while (@Counter > 0)
+                                                BEGIN
+	                                                SELECT @rulename = name from @temporaryTable	
+	                                                EXECUTE sp_delete_database_firewall_rule @name = @rulename
+	                                                delete from @temporaryTable where name = @rulename
+	                                                SET @Counter = @Counter - 1	
+                                                END                                                    
+                                                END                                                 
+                                                BEGIN
+                                                {1}
+                                                END
+                                                COMMIT TRANSACTION @TranName";
 
-                using (var sqlCommand = connection.CreateCommand())
-                {
-                    string sqlCommandTemplate = @"DECLARE @TranName VARCHAR(20);  
-												  SELECT @TranName = 'DbFireWallRule'
-												  BEGIN TRANSACTION @TranName
-                                                  IF EXISTS(SELECT * FROM sys.database_firewall_rules WHERE name like '{0}%')
-                                                  BEGIN
-                                                    DECLARE @temporaryTable table (name varchar(50))
-                                                    DECLARE @rulename nvarchar(50)
-                                                    DECLARE @Counter INT
-                                                    insert into @temporaryTable
-                                                    SELECT name from sys.database_firewall_rules WHERE name like '{0}%'
-                                                    SELECT @Counter = count(*) from @temporaryTable
-                                                    while (@Counter > 0)
-                                                    BEGIN
-	                                                    SELECT @rulename = name from @temporaryTable	
-	                                                    EXECUTE sp_delete_database_firewall_rule @name = @rulename
-	                                                    delete from @temporaryTable where name = @rulename
-	                                                    SET @Counter = @Counter - 1	
-                                                    END                                                    
-                                                  END                                                 
-                                                  BEGIN
-                                                    {1}
-                                                  END
-                                                  COMMIT TRANSACTION @TranName";
+                string sqlCommandQuery = string.Format(CultureInfo.InvariantCulture, sqlCommandTemplate, prefix, sqlQuery);
+                sqlCommand.CommandText = sqlCommandQuery;
+                sqlCommand.CommandType = System.Data.CommandType.Text;
 
-                    string sqlCommandQuery = string.Format(CultureInfo.InvariantCulture, sqlCommandTemplate, prefix, sqlQuery);
-                    sqlCommand.CommandText = sqlCommandQuery;
-                    sqlCommand.CommandType = System.Data.CommandType.Text;
+                sqlCommand.ExecuteNonQuery();
 
-                    sqlCommand.ExecuteNonQuery();
+                connection.Close();
 
-                    connection.Close();
-                }
-
-            }
         }
 
         private bool TryUpdateSQLDbFirewallRules(HttpResponseMessage error, Guid tenantId, Guid azureSubscriptionId, string dbItemName)
