@@ -93,7 +93,6 @@ namespace HackathonExamples
         {
             try
             {
-                HttpResponseMessage error = new HttpResponseMessage();
                 UpdateDatabaseFirewallRuleByPrefix(topologyInstanceId.ToString(), new List<string>());
             }
             finally
