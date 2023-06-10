@@ -123,16 +123,9 @@ namespace HackathonExamples
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            try
-            {
 
-                var batchKey = FunctionalMethods.GetKeyAsync(cancellationToken: cancellationToken);
-                DoBunchOfThingsWithKey(batchKey);
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+            var batchKey = FunctionalMethods.GetKeyAsync(cancellationToken: cancellationToken);
+            DoBunchOfThingsWithKey(batchKey);
         }
     }
 }
