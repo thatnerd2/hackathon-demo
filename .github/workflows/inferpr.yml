@@ -16,6 +16,7 @@ jobs:
           binary-path: 'bin'
       - run: cat infer-out/report.sarif
       - run: cat infer-staging/cfg.txt
+      - run: cat infer-out/logs.txt
       - name: Run InferPR
         uses: thatnerd2/InferPRAction@main
         with:
